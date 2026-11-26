@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Makes Dicio a full digital assistant, so that it can draw its overlay over other apps. -->
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="org.stypox.dicio.io.assistant.DicioVoiceInteractionSessionService"
+    android:recognitionService="org.stypox.dicio.io.input.stt_service.SttService"
+    android:supportsAssist="true" />

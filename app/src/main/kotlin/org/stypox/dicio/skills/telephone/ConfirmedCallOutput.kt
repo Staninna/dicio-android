@@ -9,7 +9,7 @@ import org.stypox.dicio.io.graphical.Headline
 import org.stypox.dicio.util.getString
 
 class ConfirmedCallOutput(
-    private val number: String?,
+    val number: String?,
 ) : SkillOutput {
     override fun getSpeechOutput(ctx: SkillContext): String = if (number == null) {
         ctx.getString(R.string.skill_telephone_not_calling)

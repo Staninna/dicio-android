@@ -26,9 +26,9 @@ import kotlin.math.absoluteValue
 
 sealed interface TimerOutput : SkillOutput {
     class Set(
-        private val milliseconds: Long,
-        private val lastTickMillis: LongState,
-        private val name: String?
+        val milliseconds: Long,
+        val lastTickMillis: LongState,
+        val name: String?
     ) : TimerOutput {
         override fun getSpeechOutput(ctx: SkillContext): String = formatStringWithName(
             ctx, name, milliseconds, R.string.skill_timer_set, R.string.skill_timer_set_name

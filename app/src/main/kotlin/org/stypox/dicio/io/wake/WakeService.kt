@@ -27,6 +27,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.stypox.dicio.MainActivity
@@ -35,10 +37,12 @@ import org.stypox.dicio.R
 import org.stypox.dicio.di.SttInputDeviceWrapper
 import org.stypox.dicio.di.WakeDeviceWrapper
 import org.stypox.dicio.eval.SkillEvaluator
+import org.stypox.dicio.io.assistant.DicioVoiceInteractionService
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
+import kotlin.math.sqrt
 
 @AndroidEntryPoint
 class WakeService : Service() {
@@ -206,6 +210,7 @@ class WakeService : Service() {
                 }
 
                 ar.read(audio, 0, audio.size)
+                _micLevel.value = normalizedLevel(audio)
 
                 val wakeWordDetected = wakeDevice.processFrame(audio)
                 if (wakeWordDetected && Instant.now() > nextWakeWordAllowed) {
@@ -218,6 +223,7 @@ class WakeService : Service() {
         } finally {
             ar.stop()
             ar.release()
+            _micLevel.value = 0f
         }
     }
 
@@ -236,9 +242,16 @@ class WakeService : Service() {
         handler.removeCallbacks(releaseSttResourcesRunnable)
         handler.postDelayed(releaseSttResourcesRunnable, RELEASE_STT_RESOURCES_MILLIS)
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || MainActivity.isInForeground > 0) {
-            // start the activity directly on versions prior to Android 10,
-            // or if the MainActivity is already running in the foreground
+        if (MainActivity.isInForeground > 0) {
+            // the MainActivity is already running in the foreground, it shows the conversation
+            startActivity(intent)
+
+        } else if (DicioVoiceInteractionService.showOverlay(fromWakeWord = true)) {
+            // Dicio is the default digital assistant, so the overlay is drawn over the current
+            // app; the STT was already started above and the overlay follows its state
+
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            // start the activity directly on versions prior to Android 10
             startActivity(intent)
 
         } else {
@@ -352,6 +365,27 @@ class WakeService : Service() {
         }
 
         private val lastHeard = AtomicReference<Instant>()
+
+        private val _micLevel = MutableStateFlow(0f)
+
+        /**
+         * Loudness of the microphone audio the wake word device hears, from 0 (silence) to 1
+         * (loud speech). The assistant overlay uses it to animate the voice orb.
+         */
+        val micLevel: StateFlow<Float> = _micLevel
+
+        private fun normalizedLevel(audio: ShortArray): Float {
+            if (audio.isEmpty()) {
+                return 0f
+            }
+            var sum = 0.0
+            for (sample in audio) {
+                sum += sample.toDouble() * sample
+            }
+            val rms = sqrt(sum / audio.size)
+            // normal speech sits around 500-4000 RMS; the square root makes quiet speech visible
+            return sqrt((rms / 4000.0).coerceIn(0.0, 1.0)).toFloat()
+        }
 
         private val TAG = WakeService::class.simpleName
         private const val FOREGROUND_NOTIFICATION_CHANNEL_ID =

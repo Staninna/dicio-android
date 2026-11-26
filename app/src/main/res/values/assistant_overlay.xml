@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- the assistant overlay needs VoiceInteractionService.showSession(), added in Android 6 -->
+    <bool name="assistant_overlay_supported">false</bool>
+</resources>

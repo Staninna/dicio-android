@@ -1,5 +1,6 @@
 package org.stypox.dicio.skills.media
 
+import android.content.Context
 import android.media.AudioManager
 import android.view.KeyEvent
 import androidx.core.content.ContextCompat.getSystemService
@@ -14,9 +15,6 @@ class MediaSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerData
     : StandardRecognizerSkill<Media>(correspondingSkillInfo, data) {
 
     override suspend fun generateOutput(ctx: SkillContext, inputData: Media): SkillOutput {
-        val audioManager = getSystemService(ctx.android, AudioManager::class.java)
-            ?: return MediaOutput(performedAction = null) // no media session found
-
         val key = when (inputData) {
             is Media.Play -> KeyEvent.KEYCODE_MEDIA_PLAY
             is Media.Pause -> KeyEvent.KEYCODE_MEDIA_PAUSE
@@ -24,12 +22,23 @@ class MediaSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerData
             is Media.Next -> KeyEvent.KEYCODE_MEDIA_NEXT
         }
 
-        audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, key))
-        audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, key))
-        return MediaOutput(performedAction = inputData)
+        return if (dispatchMediaKey(ctx.android, key)) {
+            MediaOutput(performedAction = inputData)
+        } else {
+            MediaOutput(performedAction = null) // no media session found
+        }
     }
 
     companion object {
         val TAG: String = MediaSkill::class.simpleName!!
+
+        /** Sends a media key to the active media session. Returns false without an audio manager. */
+        fun dispatchMediaKey(context: Context, key: Int): Boolean {
+            val audioManager = getSystemService(context, AudioManager::class.java)
+                ?: return false
+            audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, key))
+            audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, key))
+            return true
+        }
     }
 }

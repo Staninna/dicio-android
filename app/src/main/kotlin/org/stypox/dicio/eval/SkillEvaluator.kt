@@ -23,6 +23,7 @@ import org.stypox.dicio.ui.home.Interaction
 import org.stypox.dicio.ui.home.InteractionLog
 import org.stypox.dicio.ui.home.PendingQuestion
 import org.stypox.dicio.ui.home.QuestionAnswer
+import org.stypox.dicio.util.arePermissionsGranted
 import javax.inject.Singleton
 import org.dicio.skill.standard.util.MatchHelper
 
@@ -127,7 +128,12 @@ class SkillEvaluatorImpl(
 
         try {
             val permissions = skillInfo.neededPermissions
-            if (permissions.isNotEmpty() && !permissionRequester(permissions)) {
+            if (permissions.isNotEmpty() &&
+                // already granted permissions need no requester, which matters when the overlay
+                // runs the skill and no activity is around to request them
+                !arePermissionsGranted(skillContext.android, permissions) &&
+                !permissionRequester(permissions)
+            ) {
                 // permissions were not granted, show message
                 addInteractionFromPending(MissingPermissionsSkillOutput(skillInfo))
                 return

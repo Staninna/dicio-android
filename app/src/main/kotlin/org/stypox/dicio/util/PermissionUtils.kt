@@ -52,6 +52,17 @@ fun checkPermissions(context: Context, vararg permissions: String): Boolean {
 }
 
 /**
+ * @return true if all [permissions], normal and secure, are already granted. Needs no activity,
+ * so it also works when skills run from the assistant overlay.
+ */
+fun arePermissionsGranted(context: Context, permissions: List<Permission>): Boolean {
+    val normal = permissions.filterIsInstance<Permission.NormalPermission>().map { it.id }
+    val secure = permissions.filterIsInstance<Permission.SecurePermission>()
+    return checkPermissions(context, *normal.toTypedArray()) &&
+            getNonGrantedSecurePermissions(context, secure).isEmpty()
+}
+
+/**
  * @param grantResults an array of permission grant results to check (can be empty)
  * @return true if ALL of the provided grant results are equal to
  * [PackageManager.PERMISSION_GRANTED], false otherwise. So returns true if the provided grant

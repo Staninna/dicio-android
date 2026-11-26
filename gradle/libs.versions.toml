@@ -13,6 +13,7 @@ dicioNumbers = "4140dfd299236270fe92b3690e220943bf801c4f"
 dicioSentencesCompiler = "6d0f1ca0a732c28329b3fd0f7c8f351e00933ad6"
 exp4j = "0.4.8"
 gradle = "8.13.0"
+graphicsShapes = "1.0.1" # cannot update to 1.1.0 as its minSdk is 23
 dagger = "2.57.2"
 hilt = "1.2.0" # cannot update to 1.3.0 as its minSdk is 23
 includegitPlugin = "0.3.1"
@@ -64,6 +65,7 @@ dicio-sentences-compiler = { module = "git.included.build:dicio-sentences-compil
 # these are the two local plugins
 dicio-sentences-compiler-plugin = { module = "org.stypox.dicio.sentencesCompilerPlugin:sentences-compiler-plugin" }
 dicio-unicode-cldr-plugin = { module = "org.stypox.dicio.unicodeCldrPlugin:unicode-cldr-plugin" }
+graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
 exp4j = { module = "net.objecthunter:exp4j", version.ref = "exp4j" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "dagger" }
