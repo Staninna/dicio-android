@@ -10,4 +10,6 @@ message SkillSettingsWeather {
   string default_city = 1;
   TemperatureUnit temperature_unit = 2;
   LengthUnit length_unit = 3;
+  string default_province = 4;
+  string default_country = 5;
 }

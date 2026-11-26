@@ -83,6 +83,38 @@ object WeatherInfo : SkillInfo("weather") {
                 },
             )
 
+            StringSetting(
+                title = stringResource(R.string.pref_weather_default_province),
+                descriptionWhenEmpty = stringResource(R.string.pref_weather_default_province_summary),
+            ).Render(
+                value = data.defaultProvince,
+                onValueChange = { defaultProvince ->
+                    scope.launch {
+                        dataStore.updateData { skillSettingsWeather ->
+                            skillSettingsWeather.toBuilder()
+                                .setDefaultProvince(defaultProvince)
+                                .build()
+                        }
+                    }
+                },
+            )
+
+            StringSetting(
+                title = stringResource(R.string.pref_weather_default_country),
+                descriptionWhenEmpty = stringResource(R.string.pref_weather_default_country_summary),
+            ).Render(
+                value = data.defaultCountry,
+                onValueChange = { defaultCountry ->
+                    scope.launch {
+                        dataStore.updateData { skillSettingsWeather ->
+                            skillSettingsWeather.toBuilder()
+                                .setDefaultCountry(defaultCountry)
+                                .build()
+                        }
+                    }
+                },
+            )
+
             ListSetting(
                 title = stringResource(R.string.pref_weather_temperature_unit),
                 possibleValues = listOf(

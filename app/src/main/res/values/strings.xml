@@ -105,6 +105,10 @@
     <string name="pref_search_engine_duckduckgo" translatable="false">DuckDuckGo</string>
     <string name="pref_weather_default_city">Default city</string>
     <string name="pref_weather_default_city_using_ip_info">Set the city to use for weather when you do not explicitly say one. The current behaviour is to get the location from IP info.</string>
+    <string name="pref_weather_default_province">Default province or state</string>
+    <string name="pref_weather_default_province_summary">Tells apart places with the same name, e.g. Limburg. Only used with the default city.</string>
+    <string name="pref_weather_default_country">Default country</string>
+    <string name="pref_weather_default_country_summary">A country name or code, e.g. Netherlands or NL. Only used with the default city.</string>
     <string name="pref_stt_silence_duration_title">Maximum silence before start of speech</string>
     <string name="pref_stt_silence_duration_description">Give up listening after %1$d silent intervals</string>
     <string name="pref_stt_auto_finish_title">Directly send result of speech to text popup</string>
