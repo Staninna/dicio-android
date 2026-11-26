@@ -65,6 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -150,6 +151,8 @@ private fun OverlayContent(
     val dragOffset = remember { Animatable(0f) }
     var touches by remember { mutableIntStateOf(0) }
     var everActive by remember { mutableStateOf(false) }
+    // from the bottom of the screen to the top of the panel, so the aurora can rise above it
+    var panelSpace by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         if (fromWakeWord) {
@@ -207,31 +210,57 @@ private fun OverlayContent(
         }
     }
 
+    // the raw level changes in steps with every audio chunk; a critically damped spring turns it
+    // into a smooth swell for the aurora and the orb
+    val level by animateFloatAsState(
+        targetValue = if (state.mode == OverlayMode.LISTENING) micLevel else 0f,
+        animationSpec = spring(dampingRatio = 1f, stiffness = Spring.StiffnessLow),
+        label = "level",
+    )
     val glow by animateFloatAsState(
-        targetValue = if (state.mode == OverlayMode.LISTENING) openness.value else 0f,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        targetValue = when (state.mode) {
+            OverlayMode.LISTENING -> 1f
+            OverlayMode.THINKING -> 0.55f
+            else -> 0f
+        },
+        animationSpec = spring(dampingRatio = 1f, stiffness = Spring.StiffnessVeryLow),
         label = "glow",
     )
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        // dim the app behind; tapping it closes the overlay
+        // dim the app behind, clean at the top and darker toward the panel; tapping it closes
+        // the overlay
+        val dim = (if (dark) 0.55f else 0.16f) * openness.value.coerceIn(0f, 1f)
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = (if (dark) 0.42f else 0.28f) * openness.value.coerceIn(0f, 1f)))
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.4f to Color.Black.copy(alpha = dim * 0.3f),
+                        1f to Color.Black.copy(alpha = dim),
+                    )
+                )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                 ) { session.requestClose(byUser = true) }
         )
 
-        EdgeGlow(intensity = glow, micLevel = micLevel, modifier = Modifier.fillMaxSize())
+        BottomAurora(
+            intensity = glow * openness.value.coerceIn(0f, 1f),
+            level = level,
+            floor = panelSpace.toFloat(),
+            pulsing = state.mode == OverlayMode.THINKING,
+            modifier = Modifier.fillMaxSize(),
+        )
 
         val maxPanelHeight = maxHeight * 0.85f
         val dismissThreshold = with(density) { 96.dp.toPx() }
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                .onSizeChanged { panelSpace = it.height }
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(horizontal = 12.dp, vertical = 12.dp)
                 .widthIn(max = 560.dp)
@@ -263,7 +292,7 @@ private fun OverlayContent(
                     },
                 )
         ) {
-            Panel(session, state, micLevel, onInteract = { touches++ })
+            Panel(session, state, level, onInteract = { touches++ })
         }
     }
 }

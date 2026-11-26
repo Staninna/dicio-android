@@ -44,6 +44,7 @@ private const val THINKING_SHAPE_MILLIS = 650L
 @Composable
 fun VoiceOrb(
     mode: OverlayMode,
+    /** The smoothed microphone level, 0 when not listening. */
     micLevel: Float,
     modifier: Modifier = Modifier,
     size: Dp = 96.dp,
@@ -107,11 +108,8 @@ fun VoiceOrb(
         animationSpec = spring(stiffness = Spring.StiffnessVeryLow),
         label = "spinSpeed",
     )
-    val level by animateFloatAsState(
-        targetValue = if (mode == OverlayMode.LISTENING) micLevel else 0f,
-        animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow),
-        label = "level",
-    )
+    // already smoothed by the caller, and 0 when not listening
+    val level = micLevel
     val scale = when (mode) {
         OverlayMode.IDLE -> breath
         OverlayMode.LISTENING -> 0.92f + level * 0.32f
