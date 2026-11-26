@@ -1,6 +1,8 @@
 package org.stypox.dicio.settings
 
 import android.app.Application
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,8 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.stypox.dicio.R
 import org.stypox.dicio.io.input.SttInputDevice
+import org.stypox.dicio.io.local_ai.LocalAiPairing
 import org.stypox.dicio.settings.datastore.InputDevice
 import org.stypox.dicio.settings.datastore.Language
 import org.stypox.dicio.settings.datastore.SpeechOutputDevice
@@ -78,6 +84,15 @@ private fun MainSettingsScreen(
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) {
             viewModel.addOwwUserWakeFile(it)
+        }
+    }
+    val context = LocalContext.current
+    val localAiPairing by viewModel.localAiPairingState.collectAsState()
+    val pairLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (!viewModel.onLocalAiPairingResult(it.resultCode, it.data)) {
+            Toast.makeText(context, R.string.pref_local_ai_pair_failed, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -201,6 +216,51 @@ private fun MainSettingsScreen(
             )
         }
 
+        /* LOCAL AI (SmolChat server) */
+        item { SettingsCategoryTitle(stringResource(R.string.pref_local_ai)) }
+        if (localAiPairing == null) {
+            item {
+                val installed = viewModel.isLocalAiServerInstalled()
+                SettingsItem(
+                    title = stringResource(R.string.pref_local_ai_pair_title),
+                    icon = Icons.Default.AutoAwesome,
+                    description = stringResource(
+                        if (installed) R.string.pref_local_ai_pair_summary
+                        else R.string.pref_local_ai_pair_not_installed
+                    ),
+                    modifier = if (installed) {
+                        Modifier.clickable {
+                            try {
+                                pairLauncher.launch(LocalAiPairing.pairIntent())
+                            } catch (_: ActivityNotFoundException) {
+                                Toast.makeText(
+                                    context, R.string.pref_local_ai_pair_not_installed,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    } else {
+                        Modifier
+                    },
+                )
+            }
+        } else {
+            item {
+                localAiEnabled().Render(
+                    !settings.localAiDisabled,
+                    viewModel::setLocalAiEnabled,
+                )
+            }
+            item {
+                SettingsItem(
+                    title = stringResource(R.string.pref_local_ai_unpair_title),
+                    icon = Icons.Default.LinkOff,
+                    description = stringResource(R.string.pref_local_ai_unpair_summary),
+                    modifier = Modifier.clickable { viewModel.unpairLocalAi() },
+                )
+            }
+        }
+
         item {
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -220,6 +280,7 @@ private fun MainSettingsScreenPreview() {
                     application = Application(),
                     wakeDeviceWrapper = null,
                     dataStore = newDataStoreForPreviews(),
+                    localAiPairing = LocalAiPairing(LocalContext.current),
                 ),
             )
         }
@@ -246,7 +307,8 @@ private fun MainSettingsScreenWithTopBarPreview() {
                 viewModel = MainSettingsViewModel(
                     application = Application(),
                     wakeDeviceWrapper = null,
-                    dataStore = newDataStoreForPreviews()
+                    dataStore = newDataStoreForPreviews(),
+                    localAiPairing = LocalAiPairing(LocalContext.current),
                 )
             )
         }

@@ -1,6 +1,8 @@
 package org.stypox.dicio.settings
 
+import android.app.Activity
 import android.app.Application
+import android.content.Intent
 import android.net.Uri
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.AndroidViewModel
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.stypox.dicio.di.WakeDeviceWrapper
+import org.stypox.dicio.io.local_ai.LocalAiPairing
 import org.stypox.dicio.io.wake.oww.OpenWakeWordDevice
 import org.stypox.dicio.settings.datastore.InputDevice
 import org.stypox.dicio.settings.datastore.Language
@@ -25,7 +28,8 @@ import javax.inject.Inject
 class MainSettingsViewModel @Inject constructor(
     application: Application,
     private val wakeDeviceWrapper: WakeDeviceWrapper?,
-    private val dataStore: DataStore<UserSettings>
+    private val dataStore: DataStore<UserSettings>,
+    private val localAiPairing: LocalAiPairing,
 ) : AndroidViewModel(application) {
     // run blocking because the settings screen cannot start if settings have not been loaded yet
     val settingsState = dataStore.data
@@ -56,6 +60,19 @@ class MainSettingsViewModel @Inject constructor(
             wakeDeviceWrapper?.reinitialize()
         }
     }
+
+    val localAiPairingState: StateFlow<LocalAiPairing.Pairing?> = localAiPairing.pairing
+
+    fun isLocalAiServerInstalled(): Boolean = localAiPairing.isServerInstalled()
+
+    /** Stores the result of SmolChat's pairing activity; returns whether pairing succeeded. */
+    fun onLocalAiPairingResult(resultCode: Int, data: Intent?): Boolean =
+        resultCode == Activity.RESULT_OK && localAiPairing.onPairingResult(data)
+
+    fun unpairLocalAi() = localAiPairing.unpair()
+
+    fun setLocalAiEnabled(value: Boolean) =
+        updateData { it.setLocalAiDisabled(!value) }
 
     fun setLanguage(value: Language) =
         updateData { it.setLanguage(value) }

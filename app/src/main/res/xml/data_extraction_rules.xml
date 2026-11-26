@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- https://developer.android.com/guide/topics/data/autobackup#IncludingFiles
      Back up everything (settings, the user's own wake word model) except the speech and wake word
-     models that the app downloads again by itself. Keep in sync with full_backup_content.xml. -->
+     models that the app downloads again by itself, and the SmolChat pairing token (clients keep it
+     out of backups, so Dicio pairs again after a restore). Keep in sync with full_backup_content.xml. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="vosk-model"/>
@@ -13,6 +14,7 @@
         <exclude domain="file" path="openWakeWord/embedding.tflite.url.txt"/>
         <exclude domain="file" path="openWakeWord/wake.tflite"/>
         <exclude domain="file" path="openWakeWord/wake.tflite.url.txt"/>
+        <exclude domain="sharedpref" path="local_ai_pairing.xml"/>
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="vosk-model"/>
@@ -24,5 +26,6 @@
         <exclude domain="file" path="openWakeWord/embedding.tflite.url.txt"/>
         <exclude domain="file" path="openWakeWord/wake.tflite"/>
         <exclude domain="file" path="openWakeWord/wake.tflite.url.txt"/>
+        <exclude domain="sharedpref" path="local_ai_pairing.xml"/>
     </device-transfer>
 </data-extraction-rules>

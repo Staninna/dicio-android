@@ -3,6 +3,7 @@ package org.stypox.dicio.settings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BreakfastDining
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Cloud
@@ -187,6 +188,14 @@ fun sttSilenceDuration() = IntSetting(
     description = @Composable { stringResource(R.string.pref_stt_silence_duration_description, it) },
     minimum = 1,
     maximum = 7,
+)
+
+@Composable
+fun localAiEnabled() = BooleanSetting(
+    title = stringResource(R.string.pref_local_ai_enabled_title),
+    icon = Icons.Default.AutoAwesome,
+    descriptionOff = stringResource(R.string.pref_local_ai_enabled_summary_off),
+    descriptionOn = stringResource(R.string.pref_local_ai_enabled_summary_on),
 )
 
 @Composable

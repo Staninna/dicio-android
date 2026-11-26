@@ -11,4 +11,5 @@
     <exclude domain="file" path="openWakeWord/embedding.tflite.url.txt"/>
     <exclude domain="file" path="openWakeWord/wake.tflite"/>
     <exclude domain="file" path="openWakeWord/wake.tflite.url.txt"/>
+    <exclude domain="sharedpref" path="local_ai_pairing.xml"/>
 </full-backup-content>

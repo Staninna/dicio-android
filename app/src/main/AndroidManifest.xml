@@ -31,6 +31,21 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.location" android:required="false" />
 
+    <queries>
+        <!-- the speech recognition service input method (e.g. Parakeetype) -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <!-- the local AI fallback: pairing with and waking the SmolChat server -->
+        <package android:name="io.shubham0204.smollmandroid" />
+        <intent>
+            <action android:name="io.shubham0204.smollmandroid.action.PAIR" />
+        </intent>
+        <intent>
+            <action android:name="io.shubham0204.smollmandroid.action.WAKE" />
+        </intent>
+    </queries>
+
     <!-- Backup and restore used to start the app in "restricted mode", with a plain Application
          instead of the @HiltAndroidApp App, so any component started meanwhile crashed
          (https://medium.com/p/924c91bafcac). allowBackup=false never prevented this for
@@ -45,7 +60,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
-        android:dataExtractionRules="@xml/data_extraction_rules">
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:networkSecurityConfig="@xml/network_security_config">
 
         <property
             android:name="android.app.backup.PROPERTY_USE_RESTRICTED_BACKUP_MODE"

@@ -19,6 +19,10 @@ import org.stypox.dicio.settings.datastore.UserSettingsModule
 import org.stypox.dicio.skills.calculator.CalculatorInfo
 import org.stypox.dicio.skills.current_time.CurrentTimeInfo
 import org.stypox.dicio.skills.fallback.text.TextFallbackInfo
+import org.stypox.dicio.skills.fallback.local_ai.LocalAiFallbackInfo
+import org.stypox.dicio.io.local_ai.LocalAiClient
+import org.stypox.dicio.io.local_ai.LocalAiPairing
+import okhttp3.OkHttpClient
 import org.stypox.dicio.skills.listening.ListeningInfo
 import org.stypox.dicio.skills.lyrics.LyricsInfo
 import org.stypox.dicio.skills.media.MediaInfo
@@ -40,6 +44,8 @@ class SkillHandler @Inject constructor(
     private val dataStore: DataStore<UserSettings>,
     private val localeManager: LocaleManager,
     private val skillContext: SkillContextInternal,
+    localAiPairing: LocalAiPairing,
+    localAiClient: LocalAiClient,
 ) {
     // TODO improve id handling (maybe just use an int that can point to an Android resource)
     val allSkillInfoList = listOf(
@@ -60,9 +66,9 @@ class SkillHandler @Inject constructor(
         FlashlightInfo,
     )
 
-    private val fallbackSkillInfoList = listOf(
-        TextFallbackInfo,
-    )
+    private val textFallbackSkillInfo = TextFallbackInfo
+    // when Dicio is paired with the SmolChat server, its language model answers instead
+    private val localAiFallbackSkillInfo = LocalAiFallbackInfo(localAiClient)
 
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -72,16 +78,19 @@ class SkillHandler @Inject constructor(
 
     private val _skillRanker = MutableStateFlow(
         // an initial dummy value, will be overwritten directly by the launched job
-        SkillRanker(listOf(), fallbackSkillInfoList[0].build(skillContext)!!)
+        SkillRanker(listOf(), textFallbackSkillInfo.build(skillContext))
     )
     val skillRanker: StateFlow<SkillRanker> = _skillRanker
 
     init {
         scope.launch {
             localeManager.locale
-                .combine(dataStore.data) { locale, data -> Pair(locale, data.enabledSkillsMap) }
+                .combine(dataStore.data) { locale, data -> Triple(locale, data.enabledSkillsMap, data.localAiDisabled) }
+                .combine(localAiPairing.pairing) { (locale, enabledSkills, localAiDisabled), pairing ->
+                    Triple(locale, enabledSkills, pairing != null && !localAiDisabled)
+                }
                 .distinctUntilChanged()
-                .collectLatest { (_, enabledSkills) ->
+                .collectLatest { (_, enabledSkills, useLocalAi) ->
                     // locale is not used here, because the skills directly use the sections locale
 
                     val newEnabledSkillsInfo = allSkillInfoList
@@ -91,7 +100,8 @@ class SkillHandler @Inject constructor(
                     _enabledSkillsInfo.value = newEnabledSkillsInfo.map { (info, _skill) -> info }
                     _skillRanker.value = SkillRanker(
                         newEnabledSkillsInfo.map { (_info, skill) -> skill },
-                        fallbackSkillInfoList[0].build(skillContext)!!,
+                        if (useLocalAi) localAiFallbackSkillInfo.build(skillContext)
+                        else textFallbackSkillInfo.build(skillContext),
                     )
                 }
         }
@@ -103,6 +113,8 @@ class SkillHandler @Inject constructor(
                 UserSettingsModule.newDataStoreForPreviews(),
                 LocaleManager.newForPreviews(context),
                 SkillContextImpl.newForPreviews(context),
+                LocalAiPairing(context),
+                LocalAiClient(context, OkHttpClient(), LocalAiPairing(context)),
             )
         }
     }

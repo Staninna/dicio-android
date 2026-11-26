@@ -145,10 +145,21 @@ class SkillEvaluatorImpl(
 
             val interactionPlan = output.getInteractionPlan(skillContext)
             addInteractionFromPending(output)
-            output.getSpeechOutput(skillContext).let {
-                if (it.isNotBlank()) {
-                    withContext (Dispatchers.Main) {
-                        skillContext.speechOutputDevice.speak(it)
+            if (output is StreamingSkillOutput) {
+                // shown already, speak every sentence as soon as it is ready
+                output.produce { speech ->
+                    if (speech.isNotBlank()) {
+                        withContext(Dispatchers.Main) {
+                            skillContext.speechOutputDevice.speak(speech)
+                        }
+                    }
+                }
+            } else {
+                output.getSpeechOutput(skillContext).let {
+                    if (it.isNotBlank()) {
+                        withContext (Dispatchers.Main) {
+                            skillContext.speechOutputDevice.speak(it)
+                        }
                     }
                 }
             }

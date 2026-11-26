@@ -77,6 +77,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.stypox.dicio.io.assistant.AssistantSession
 import org.stypox.dicio.io.graphical.ErrorSkillOutput
+import org.stypox.dicio.eval.StreamingSkillOutput
 import org.stypox.dicio.io.graphical.MissingPermissionsSkillOutput
 import org.stypox.dicio.io.wake.WakeService
 import org.stypox.dicio.ui.home.QuestionAnswer
@@ -196,7 +197,9 @@ private fun OverlayContent(
         }
         when (state.mode) {
             OverlayMode.ANSWERING -> {
-                while (session.isSpeaking()) {
+                // an answer still being written (local AI) is spoken sentence by sentence
+                val streaming = state.answer?.answer as? StreamingSkillOutput
+                while (session.isSpeaking() || streaming?.isProducing?.value == true) {
                     delay(200)
                 }
                 delay(ANSWER_CLOSE_DELAY_MILLIS)
