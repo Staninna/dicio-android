@@ -12,4 +12,5 @@ message SkillSettingsWeather {
   LengthUnit length_unit = 3;
   string default_province = 4;
   string default_country = 5;
+  bool use_current_location = 6;
 }

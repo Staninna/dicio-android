@@ -1,5 +1,6 @@
 package org.stypox.dicio.skills.weather
 
+import android.location.Location
 import kotlinx.coroutines.flow.first
 import org.dicio.skill.context.SkillContext
 import org.dicio.skill.skill.SkillInfo
@@ -21,12 +22,14 @@ class WeatherSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerDa
 
     override suspend fun generateOutput(ctx: SkillContext, inputData: Weather): SkillOutput {
         val prefs = ctx.android.weatherDataStore.data.first()
-        val place = getPlace(prefs, inputData) ?: return WeatherOutput.Failed(city = "")
+        val place = getPlace(ctx, prefs, inputData) ?: return WeatherOutput.Failed(city = "")
         val lang = ctx.locale.language.lowercase(Locale.getDefault())
 
         var cityName: String? = null
         val weatherData = try {
-            val where = if (place.province.isEmpty() && place.country.isEmpty()) {
+            val where = if (place.location != null) {
+                "&lat=" + place.location.latitude + "&lon=" + place.location.longitude
+            } else if (place.province.isEmpty() && place.country.isEmpty()) {
                 "&q=" + ConnectionUtils.urlEncode(place.city)
             } else {
                 // the weather API only understands US state codes, so find the exact place first
@@ -69,15 +72,29 @@ class WeatherSkill(correspondingSkillInfo: SkillInfo, data: StandardRecognizerDa
         )
     }
 
-    private data class Place(val city: String, val province: String = "", val country: String = "")
+    private data class Place(
+        val city: String,
+        val province: String = "",
+        val country: String = "",
+        val location: Location? = null,
+    )
 
-    private fun getPlace(prefs: SkillSettingsWeather, inputData: Weather): Place? {
+    private suspend fun getPlace(
+        ctx: SkillContext,
+        prefs: SkillSettingsWeather,
+        inputData: Weather,
+    ): Place? {
         val spokenCity = when (inputData) {
             is Weather.Current -> inputData.where
         }
         if (!spokenCity.isNullOrEmpty()) {
             // the default province and country belong to the default city, not to a spoken one
             return Place(spokenCity)
+        }
+
+        if (prefs.useCurrentLocation) {
+            // without permission or a fix, fall back to the default city or IP info
+            CurrentLocation.get(ctx.android)?.let { return Place(city = "", location = it) }
         }
 
         val defaultCity = StringUtils.removePunctuation(prefs.defaultCity.trim { ch -> ch <= ' ' })

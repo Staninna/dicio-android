@@ -1,7 +1,10 @@
 package org.stypox.dicio.skills.weather
 
+import android.Manifest
 import android.content.Context
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
@@ -21,6 +24,7 @@ import org.dicio.skill.skill.Skill
 import org.dicio.skill.skill.SkillInfo
 import org.stypox.dicio.R
 import org.stypox.dicio.sentences.Sentences
+import org.stypox.dicio.settings.ui.BooleanSetting
 import org.stypox.dicio.settings.ui.ListSetting
 import org.stypox.dicio.settings.ui.StringSetting
 
@@ -62,11 +66,41 @@ object WeatherInfo : SkillInfo("weather") {
     )
 
     override val renderSettings: @Composable () -> Unit get() = @Composable {
-        val dataStore = LocalContext.current.weatherDataStore
+        val context = LocalContext.current
+        val dataStore = context.weatherDataStore
         val data by dataStore.data.collectAsState(SkillSettingsWeatherSerializer.defaultValue)
         val scope = rememberCoroutineScope()
 
+        fun setUseCurrentLocation(value: Boolean) {
+            scope.launch {
+                dataStore.updateData { skillSettingsWeather ->
+                    skillSettingsWeather.toBuilder()
+                        .setUseCurrentLocation(value)
+                        .build()
+                }
+            }
+        }
+        val locationPermissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted -> setUseCurrentLocation(granted) }
+
         Column {
+            BooleanSetting(
+                title = stringResource(R.string.pref_weather_use_current_location),
+                descriptionOff = stringResource(R.string.pref_weather_use_current_location_off),
+                descriptionOn = stringResource(R.string.pref_weather_use_current_location_on),
+            ).Render(
+                // shows as off when the permission was revoked, so tapping asks for it again
+                value = data.useCurrentLocation && CurrentLocation.hasPermission(context),
+                onValueChange = { enable ->
+                    if (enable && !CurrentLocation.hasPermission(context)) {
+                        locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    } else {
+                        setUseCurrentLocation(enable)
+                    }
+                },
+            )
+
             StringSetting(
                 title = stringResource(R.string.pref_weather_default_city),
                 descriptionWhenEmpty = stringResource(R.string.pref_weather_default_city_using_ip_info),

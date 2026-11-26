@@ -103,6 +103,9 @@
     <string name="pref_skill_number_library_not_available">The number parsing and formatting library <i>dicio-numbers</i> is not yet translated in your language, which means all of the skills related to numbers, durations and dates are not available. <b>Please contribute</b> if you can by tapping here!</string>
     <string name="pref_search_engine">Search engine</string>
     <string name="pref_search_engine_duckduckgo" translatable="false">DuckDuckGo</string>
+    <string name="pref_weather_use_current_location">Use approximate location</string>
+    <string name="pref_weather_use_current_location_off">Uses the default city below, or IP info if it is empty</string>
+    <string name="pref_weather_use_current_location_on">Uses the approximate location of your phone, or the default city when no location is available</string>
     <string name="pref_weather_default_city">Default city</string>
     <string name="pref_weather_default_city_using_ip_info">Set the city to use for weather when you do not explicitly say one. The current behaviour is to get the location from IP info.</string>
     <string name="pref_weather_default_province">Default province or state</string>
