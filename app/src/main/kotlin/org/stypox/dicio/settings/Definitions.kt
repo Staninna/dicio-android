@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PictureInPictureAlt
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.SpeakerPhone
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -113,6 +114,12 @@ fun inputDevice() = ListSetting(
             name = stringResource(R.string.pref_input_method_vosk),
             description = stringResource(R.string.pref_input_method_vosk_summary),
             icon = Icons.Default.Mic,
+        ),
+        ListSetting.Value(
+            value = InputDevice.INPUT_DEVICE_RECOGNITION_SERVICE,
+            name = stringResource(R.string.pref_input_method_recognition_service),
+            description = stringResource(R.string.pref_input_method_recognition_service_summary),
+            icon = Icons.Default.RecordVoiceOver,
         ),
         ListSetting.Value(
             value = InputDevice.INPUT_DEVICE_EXTERNAL_POPUP,
