@@ -27,10 +27,14 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
-    <!-- allowBackup=false because of a critical nasty bug: https://medium.com/p/924c91bafcac -->
+    <!-- Backup and restore used to start the app in "restricted mode", with a plain Application
+         instead of the @HiltAndroidApp App, so any component started meanwhile crashed
+         (https://medium.com/p/924c91bafcac). allowBackup=false never prevented this for
+         device-to-device transfers such as Seedvault. On Android 16+ the
+         PROPERTY_USE_RESTRICTED_BACKUP_MODE property below turns restricted mode off. -->
     <application
         android:name=".App"
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:fullBackupContent="@xml/full_backup_content"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -38,6 +42,10 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         android:dataExtractionRules="@xml/data_extraction_rules">
+
+        <property
+            android:name="android.app.backup.PROPERTY_USE_RESTRICTED_BACKUP_MODE"
+            android:value="false" />
 
         <activity
             android:name=".MainActivity"

@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- https://developer.android.com/guide/topics/data/autobackup#IncludingFiles -->
+<!-- https://developer.android.com/guide/topics/data/autobackup#IncludingFiles
+     Used on Android 11 and older. Keep in sync with data_extraction_rules.xml. -->
 <full-backup-content>
-    <include domain="sharedpref" path="."/>
+    <exclude domain="file" path="vosk-model"/>
+    <exclude domain="file" path="vosk-model.zip"/>
+    <exclude domain="file" path="vosk-model-url"/>
+    <exclude domain="file" path="openWakeWord/melspectrogram.tflite"/>
+    <exclude domain="file" path="openWakeWord/melspectrogram.tflite.url.txt"/>
+    <exclude domain="file" path="openWakeWord/embedding.tflite"/>
+    <exclude domain="file" path="openWakeWord/embedding.tflite.url.txt"/>
+    <exclude domain="file" path="openWakeWord/wake.tflite"/>
+    <exclude domain="file" path="openWakeWord/wake.tflite.url.txt"/>
 </full-backup-content>

@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- https://developer.android.com/guide/topics/data/autobackup#IncludingFiles -->
+<!-- https://developer.android.com/guide/topics/data/autobackup#IncludingFiles
+     Back up everything (settings, the user's own wake word model) except the speech and wake word
+     models that the app downloads again by itself. Keep in sync with full_backup_content.xml. -->
 <data-extraction-rules>
     <cloud-backup>
-        <include domain="sharedpref" path="."/>
+        <exclude domain="file" path="vosk-model"/>
+        <exclude domain="file" path="vosk-model.zip"/>
+        <exclude domain="file" path="vosk-model-url"/>
+        <exclude domain="file" path="openWakeWord/melspectrogram.tflite"/>
+        <exclude domain="file" path="openWakeWord/melspectrogram.tflite.url.txt"/>
+        <exclude domain="file" path="openWakeWord/embedding.tflite"/>
+        <exclude domain="file" path="openWakeWord/embedding.tflite.url.txt"/>
+        <exclude domain="file" path="openWakeWord/wake.tflite"/>
+        <exclude domain="file" path="openWakeWord/wake.tflite.url.txt"/>
     </cloud-backup>
     <device-transfer>
-        <include domain="sharedpref" path="."/>
+        <exclude domain="file" path="vosk-model"/>
+        <exclude domain="file" path="vosk-model.zip"/>
+        <exclude domain="file" path="vosk-model-url"/>
+        <exclude domain="file" path="openWakeWord/melspectrogram.tflite"/>
+        <exclude domain="file" path="openWakeWord/melspectrogram.tflite.url.txt"/>
+        <exclude domain="file" path="openWakeWord/embedding.tflite"/>
+        <exclude domain="file" path="openWakeWord/embedding.tflite.url.txt"/>
+        <exclude domain="file" path="openWakeWord/wake.tflite"/>
+        <exclude domain="file" path="openWakeWord/wake.tflite.url.txt"/>
     </device-transfer>
 </data-extraction-rules>
